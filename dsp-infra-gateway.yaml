@@ -1,0 +1,52 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: dsp-infra-gateway
+  labels:
+    component: dsp-infra-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: dsp-infra-gateway
+  template:
+    metadata:
+      labels:
+        component: dsp-infra-gateway
+    spec:
+      hostAliases:
+      - ip: "10.250.238.35"
+        hostnames:
+        - "registry.secuiot"
+      containers:
+      - name: dsp-infra-gateway
+        image: registry.secuiot/test/dsp-infra-gateway:18.07.12.22.27-SNAPSHOT
+        resources:
+          requests:
+            memory: "1024Mi"
+          limits:
+            memory: "2048Mi"
+        env:
+        - name: JVM_OPTS
+          value: "-Xms512M -Xmx1024M -XX:MetaspaceSize=192M -XX:MaxMetaspaceSize=1024m"
+        ports:
+        - containerPort: 8200
+          name: http
+      nodeSelector:
+        apigw: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dsp-infra-gateway-cs
+  labels:
+    component: dsp-infra-gateway
+spec:
+  selector:
+    component: dsp-infra-gateway
+  ports:
+  - protocol: "TCP"
+    port: 8200
+    targetPort: 8200
+    name: dsp-infra-gateway-8200
+  type: ClusterIP

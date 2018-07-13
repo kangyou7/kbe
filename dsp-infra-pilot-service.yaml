@@ -1,0 +1,44 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: dsp-infra-pilot-service
+  labels:
+    component: dsp-infra-pilot-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: dsp-infra-pilot-service
+  template:
+    metadata:
+      labels:
+        component: dsp-infra-pilot-service
+    spec:
+      hostAliases:
+      - ip: "10.250.238.35"
+        hostnames:
+        - "registry.secuiot"
+      containers:
+      - name: dsp-infra-pilot-service
+        image: registry.secuiot/test/dsp-infra-pilot-service:18.05.12.23.32-SNAPSHOT
+        ports:
+        - containerPort: 8081
+          name: http
+      nodeSelector:
+        apigw: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dsp-infra-pilot-service-cs
+  labels:
+    component: dsp-infra-pilot-service
+spec:
+  selector:
+    component: dsp-infra-pilot-service
+  ports:
+  - protocol: "TCP"
+    port: 8081
+    targetPort: 8081
+    name: dsp-infra-pilot-service-8081
+  type: ClusterIP

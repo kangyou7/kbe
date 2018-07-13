@@ -1,0 +1,36 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: dsp-ui-control
+  labels:
+    component: dsp-ui-control
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: dsp-ui-control
+  template:
+    metadata:
+      labels:
+        component: dsp-ui-control
+    spec:
+      hostAliases:
+      - ip: "10.250.238.35"
+        hostnames:
+        - "registry.secuiot"
+      containers:
+      - name: dsp-ui-control
+        image: registry.secuiot/front/dsp-ui-control:18.07.13.11.50
+        resources:
+          requests:
+            memory: "1024Mi"
+          limits:
+            memory: "2048Mi"
+        env:
+        - name: JVM_OPTS
+          value: "-Xms512M -Xmx1024M -XX:MetaspaceSize=192M -XX:MaxMetaspaceSize=1024m"
+        ports:
+        - containerPort: 8080
+          name: http
+      nodeSelector:
+        portal: "true"

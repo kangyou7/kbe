@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dsp-ui-control-lb
+  labels:
+    component: dsp-ui-control
+spec:
+  selector:
+    component: dsp-ui-control
+  ports:
+  - protocol: "TCP"
+    port: 5050
+    targetPort: 8080
+  type: LoadBalancer

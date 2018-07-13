@@ -1,0 +1,52 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: dsp-svc-alarm-23
+  labels:
+    component: dsp-svc-alarm-23
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: dsp-svc-alarm-23
+  template:
+    metadata:
+      labels:
+        component: dsp-svc-alarm-23
+    spec:
+      hostAliases:
+      - ip: "10.250.238.35"
+        hostnames:
+        - "registry.secuiot"
+      containers:
+      - name: dsp-svc-alarm-23
+        image: registry.secuiot/test/dsp-svc-alarm-23:18.07.13.10.06-SNAPSHOT
+        resources:
+          requests:
+            memory: "1024Mi"
+          limits:
+            memory: "2048Mi"
+        env:
+        - name: JVM_OPTS
+          value: "-Xms512M -Xmx1024M -XX:MetaspaceSize=192M -XX:MaxMetaspaceSize=1024m"
+        ports:
+        - containerPort: 8081
+          name: http
+      nodeSelector:
+        dsaas-analy: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dsp-svc-alarm-23-cs
+  labels:
+    component: dsp-svc-alarm-23
+spec:
+  selector:
+    component: dsp-svc-alarm-23
+  ports:
+  - protocol: "TCP"
+    port: 8081
+    targetPort: 8081
+    name: dsp-svc-alarm-23-8081
+  type: ClusterIP

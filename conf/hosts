@@ -1,0 +1,9 @@
+
+10.250.238.35		ds-node01		# JOB:master	BASE:O
+10.250.238.35		ds-node01		# JOB:resource	BASE:O
+10.250.238.35		registry		# JOB:resource	BASE:O
+10.250.238.36		ds-node02		# JOB:worker	BASE:O	SETTED:E	TAG:hadoopnn-0,hadoop-namenode-0,hadoopnn,apigw,portal,msa,dsaas-apigw,dsaas-portal,dsaas-msa
+10.250.238.37		ds-node03		# JOB:worker	BASE:O	SETTED:E	TAG:hadoopnn-1,hadoop-namenode-1,hadoopnn,hadoopjn,hadoop-journalnode,kafka,collect,collect-1,esmaster,esclient,zookeeper,zk-svc,spark-master,redis-master,ingress
+10.250.238.38		ds-node04		# JOB:worker	BASE:O	SETTED:E	TAG:hadoopdn,hadoop-datanode,hadoopjn,hadoop-journalnode,kafka,hive,spark,zookeeper,zk-svc,esdata,redis-slave,postsql,hive-metastore-postgresql
+10.250.238.39		ds-node05		# JOB:worker	BASE:O	SETTED:E	TAG:hadoopdn,hadoop-datanode,hadoopjn,hadoop-journalnode,kafka,hive,hive-metastore,spark,zookeeper,zk-svc,esdata,redis-slave,postsql
+10.250.238.47		ds-node06		# JOB:worker	BASE:O	SETTED:E	TAG:dsaas-analy

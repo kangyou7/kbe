@@ -1,0 +1,44 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: dsp-infra-hystrix-turbine
+  labels:
+    component: dsp-infra-hystrix-turbine
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: dsp-infra-hystrix-turbine
+  template:
+    metadata:
+      labels:
+        component: dsp-infra-hystrix-turbine
+    spec:
+      hostAliases:
+      - ip: "10.250.238.35"
+        hostnames:
+        - "registry.secuiot"
+      containers:
+      - name: dsp-infra-hystrix-turbine
+        image: registry.secuiot/test/dsp-infra-hystrix-turbine:18.05.17.19.59-SNAPSHOT
+        ports:
+        - containerPort: 8081
+          name: http
+      nodeSelector:
+        apigw: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dsp-infra-hystrix-turbine-cs
+  labels:
+    component: dsp-infra-hystrix-turbine
+spec:
+  selector:
+    component: dsp-infra-hystrix-turbine
+  ports:
+  - protocol: "TCP"
+    port: 8081
+    targetPort: 8081
+    name: dsp-infra-hystrix-turbine-8081
+  type: ClusterIP

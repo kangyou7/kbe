@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dsp-infra-zipkin-lb
+  labels:
+    component: dsp-infra-zipkin
+spec:
+  selector:
+    component: dsp-infra-zipkin
+  ports:
+  - protocol: "TCP"
+    port: 9411
+    targetPort: 9411
+  type: LoadBalancer

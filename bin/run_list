@@ -1,0 +1,3 @@
+dsp-aggregator:com.skinfosec.dsp.spark.agg.AggregatorAll:
+dsp-svc-simple:com.skinfosec.dsp.simple.SimpleMain:21
+dsp-svc-simple:com.skinfosec.dsp.simple.SimpleMain:23

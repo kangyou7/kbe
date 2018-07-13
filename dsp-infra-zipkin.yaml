@@ -1,0 +1,52 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: dsp-infra-zipkin
+  labels:
+    component: dsp-infra-zipkin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: dsp-infra-zipkin
+  template:
+    metadata:
+      labels:
+        component: dsp-infra-zipkin
+    spec:
+      hostAliases:
+      - ip: "10.250.238.35"
+        hostnames:
+        - "registry.secuiot"
+      containers:
+      - name: dsp-infra-zipkin
+        image: registry.secuiot/test/dsp-infra-zipkin:18.07.08.16.47-SNAPSHOT
+        resources:
+          requests:
+            memory: "1024Mi"
+          limits:
+            memory: "2048Mi"
+        env:
+        - name: JVM_OPTS
+          value: "-Xms512M -Xmx1024M -XX:MetaspaceSize=192M -XX:MaxMetaspaceSize=1024m"
+        ports:
+        - containerPort: 9411
+          name: http
+      nodeSelector:
+        apigw: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dsp-infra-zipkin-cs
+  labels:
+    component: dsp-infra-zipkin
+spec:
+  selector:
+    component: dsp-infra-zipkin
+  ports:
+  - protocol: "TCP"
+    port: 9411
+    targetPort: 9411
+    name: dsp-infra-zipkin-9411
+  type: ClusterIP

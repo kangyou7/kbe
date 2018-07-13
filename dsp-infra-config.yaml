@@ -1,0 +1,52 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: dsp-infra-config
+  labels:
+    component: dsp-infra-config
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: dsp-infra-config
+  template:
+    metadata:
+      labels:
+        component: dsp-infra-config
+    spec:
+      hostAliases:
+      - ip: "10.250.238.35"
+        hostnames:
+        - "registry.secuiot"
+      containers:
+      - name: dsp-infra-config
+        image: registry.secuiot/test/dsp-infra-config:18.07.08.17.28-SNAPSHOT
+        resources:
+          requests:
+            memory: "1024Mi"
+          limits:
+            memory: "2048Mi"
+        env:
+        - name: JVM_OPTS
+          value: "-Xms512M -Xmx512M -XX:MetaspaceSize=192M -XX:MaxMetaspaceSize=1024m"
+        ports:
+        - containerPort: 8081
+          name: http
+      nodeSelector:
+        apigw: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dsp-infra-config-cs
+  labels:
+    component: dsp-infra-config
+spec:
+  selector:
+    component: dsp-infra-config
+  ports:
+  - protocol: "TCP"
+    port: 8081
+    targetPort: 8081
+    name: dsp-infra-config-8081
+  type: ClusterIP

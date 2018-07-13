@@ -1,0 +1,15 @@
+#!/bin/bash
+
+if [ $# -lt 1 ] ; then
+   echo "Usage: $0 <PROJ_NAME>"
+   exit
+fi
+
+PROJ_NAME=$1
+
+ENTPOINT_STR=""
+ENTPOINT_STR="cd /${PROJ_NAME}\n"
+ENTPOINT_STR=$ENTPOINT_STR"npm run stg\n"
+#ENTPOINT_STR=$ENTPOINT_STR"node server.js\n"
+
+printf "$ENTPOINT_STR"

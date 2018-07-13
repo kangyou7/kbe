@@ -1,0 +1,60 @@
+#!/bin/bash
+
+RUN_FILE=$1
+
+if ! [ -f "$RUN_FILE" ]; then
+	echo 'ERROR : run_list file does not exist!!'
+	exit
+fi
+
+YAML_STR="apiVersion: extensions/v1beta1\n"
+YAML_STR=$YAML_STR"kind: Deployment\n"
+YAML_STR=$YAML_STR"metadata:\n"
+YAML_STR=$YAML_STR"  name: spark-master\n"
+YAML_STR=$YAML_STR"  labels:\n"
+YAML_STR=$YAML_STR"    name: spark-master\n"
+YAML_STR=$YAML_STR"spec:\n"
+YAML_STR=$YAML_STR"  replicas: 1\n"
+YAML_STR=$YAML_STR"  template:\n"
+YAML_STR=$YAML_STR"    metadata:\n"
+YAML_STR=$YAML_STR"      labels:\n"
+YAML_STR=$YAML_STR"        name: spark-master\n"
+YAML_STR=$YAML_STR"    spec:\n"
+YAML_STR=$YAML_STR"      nodeSelector:\n"
+YAML_STR=$YAML_STR"        spark-master: \"true\"\n"
+YAML_STR=$YAML_STR"      containers:\n"
+YAML_STR=$YAML_STR"      - name: spark-master\n"
+YAML_STR=$YAML_STR"        image: registry.secuiot/infra/spark:2.3.0-hadoop2.7_5\n"
+YAML_STR=$YAML_STR"        imagePullPolicy: \"IfNotPresent\"\n"
+YAML_STR=$YAML_STR"        volumeMounts:\n"
+YAML_STR=$YAML_STR"            - name: spark-data\n"
+YAML_STR=$YAML_STR"              mountPath: /data\n"
+YAML_STR=$YAML_STR"        name: spark-master\n"
+YAML_STR=$YAML_STR"        ports:\n"
+YAML_STR=$YAML_STR"        - containerPort: 7077\n"
+YAML_STR=$YAML_STR"          protocol: TCP\n"
+YAML_STR=$YAML_STR"        command:\n"
+YAML_STR=$YAML_STR"          - \"/bin/bash\"\n"
+YAML_STR=$YAML_STR"          - \"-c\"\n"
+YAML_STR=$YAML_STR"          - \"--\"\n"
+YAML_STR=$YAML_STR"        args :\n"
+YAML_STR=$YAML_STR"          - '/start-master.sh &\n"
+
+while read LINE; do
+	IFS=':' read -r -a array <<< "$LINE"
+	YAML_STR=$YAML_STR"          /opt/spark/bin/spark-submit --class ${array[1]} /data/${array[0]}*"
+	if [ ${#array[@]} == 3 ]; then
+		YAML_STR=$YAML_STR" ${array[2]}"
+	fi
+	YAML_STR=$YAML_STR"&\n"
+done < $RUN_FILE
+
+YAML_STR=$YAML_STR"        while true ; do sleep 3600 ; done'\n"
+YAML_STR=$YAML_STR"      volumes:\n"
+YAML_STR=$YAML_STR"        - hostPath:\n"
+YAML_STR=$YAML_STR"            path: /disk1/spark/data\n"
+YAML_STR=$YAML_STR"          name: spark-data\n"
+
+
+
+printf "$YAML_STR"

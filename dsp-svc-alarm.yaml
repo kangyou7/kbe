@@ -1,0 +1,44 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: dsp-svc-alarm
+  labels:
+    component: dsp-svc-alarm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: dsp-svc-alarm
+  template:
+    metadata:
+      labels:
+        component: dsp-svc-alarm
+    spec:
+      hostAliases:
+      - ip: "10.250.238.35"
+        hostnames:
+        - "registry.secuiot"
+      containers:
+      - name: dsp-svc-alarm
+        image: registry.secuiot/test/dsp-svc-alarm:18.05.11.19.42-SNAPSHOT
+        ports:
+        - containerPort: 8081
+          name: http
+      nodeSelector:
+        dsaas-analy: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dsp-svc-alarm-cs
+  labels:
+    component: dsp-svc-alarm
+spec:
+  selector:
+    component: dsp-svc-alarm
+  ports:
+  - protocol: "TCP"
+    port: 8081
+    targetPort: 8081
+    name: dsp-svc-alarm-8081
+  type: ClusterIP

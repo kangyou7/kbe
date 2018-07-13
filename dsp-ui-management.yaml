@@ -1,0 +1,36 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: dsp-ui-management
+  labels:
+    component: dsp-ui-management
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: dsp-ui-management
+  template:
+    metadata:
+      labels:
+        component: dsp-ui-management
+    spec:
+      hostAliases:
+      - ip: "10.250.238.35"
+        hostnames:
+        - "registry.secuiot"
+      containers:
+      - name: dsp-ui-management
+        image: registry.secuiot/front/dsp-ui-management:18.07.13.11.50
+        resources:
+          requests:
+            memory: "1024Mi"
+          limits:
+            memory: "2048Mi"
+        env:
+        - name: JVM_OPTS
+          value: "-Xms512M -Xmx1024M -XX:MetaspaceSize=192M -XX:MaxMetaspaceSize=1024m"
+        ports:
+        - containerPort: 8080
+          name: http
+      nodeSelector:
+        portal: "true"

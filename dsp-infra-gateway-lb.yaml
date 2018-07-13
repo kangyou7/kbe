@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dsp-infra-gateway-lb
+  labels:
+    component: dsp-infra-gateway
+spec:
+  selector:
+    component: dsp-infra-gateway
+  ports:
+  - protocol: "TCP"
+    port: 8200
+    targetPort: 8200
+  type: LoadBalancer

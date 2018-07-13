@@ -1,0 +1,57 @@
+#!/bin/bash
+
+INST_PATH=$(dirname $(dirname $(which $0)))
+source $INST_PATH/conf/envs
+source $INST_PATH/bin/.color
+
+if [ $# -ne 4 ] ; then
+   echo "Usages : $0 <Project Name> <Docker Image> <Tag> <PORT>"
+   echo " Ex. $0 dsp-svc-control 10.178.167.25:5000/test/dsp-svc-control 18.03.05.14.23-SNAPSHOT 8081"
+   exit
+fi
+
+PN=$1
+DI=$2
+DIT=$3
+PORT=$4
+
+NSC201=$(netstat -anp|grep 20122|wc -l)
+
+SSHPORT=""
+if [ $NSC201 -eq 2 ] ; then 
+   SSHPORT="20122"
+elif [ $NSC201 -gt 2 ] ; then
+   echo -e "Error on SSH Turnnel!\nFix by below\non Host : kill $(ps -ef |grep -v grep|grep ssh\ -N|awk '{print $2}')\non SVR : systemctl restart sshd\non Host : ssh -N -R 20122:192.168.0.10:22 dsdev@169.56.89.11 &"
+else
+   echo -e "Please Connect SSH Turnnel 20122"
+fi
+
+#if [ ${PN:6} == "dsp-ui" ] ; then
+if [ $PORT == "8080" ] ; then
+   PORT2=80
+#   LNK="--link dsp-svc-control"
+else
+   PORT2=$PORT
+#   LNK="--link dsp-ui-control"
+fi
+
+for SPORT in $SSHPORT
+do
+   echo -e "$RED# Send to $GREEN$SPORT$NC"
+   echo -e $BLUE"   1.send image"$NC
+   scp -P $SPORT $BASE_DIR/DI_backup/$PN.$DIT.tar.gz root@localhost:/data/ 
+
+   echo -e $BLUE"   2.load image to Docker"$NC
+   ssh -p $SPORT root@localhost "gunzip -c /data/$PN.$DIT.tar.gz | docker load"
+
+   echo -e $BLUE"   3.change container"$NC
+   echo -en "      3-1.Remove ${RED}OLD${NC} docker container : "
+   CONID=$(ssh -p $SPORT root@localhost "docker ps -a |grep $PN"|awk '{print $1}')
+   echo $CONID
+   if [ ${#CONID} -ne 0 ] ; then
+      ssh -p $SPORT root@localhost "docker rm -f $CONID"
+   fi
+   echo -e "      3-2.run ${GREEN}NEW${NC} docker container : ${GREEN}$PN $DIT${NC}"
+   ssh -p $SPORT root@localhost "docker run -d --restart=always -p $PORT2:$PORT --link postgresql:postgresql --name $PN $DI:$DIT"
+done
+

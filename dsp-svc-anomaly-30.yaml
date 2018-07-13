@@ -1,0 +1,52 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: dsp-svc-anomaly-30
+  labels:
+    component: dsp-svc-anomaly-30
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: dsp-svc-anomaly-30
+  template:
+    metadata:
+      labels:
+        component: dsp-svc-anomaly-30
+    spec:
+      hostAliases:
+      - ip: "10.250.238.35"
+        hostnames:
+        - "registry.secuiot"
+      containers:
+      - name: dsp-svc-anomaly-30
+        image: registry.secuiot/test/dsp-svc-anomaly-30:18.06.21.18.18-SNAPSHOT
+        resources:
+          requests:
+            memory: "1024Mi"
+          limits:
+            memory: "2048Mi"
+        env:
+        - name: JVM_OPTS
+          value: "-Xms512M -Xmx1024M -XX:MetaspaceSize=192M -XX:MaxMetaspaceSize=1024m"
+        ports:
+        - containerPort: 8081
+          name: http
+      nodeSelector:
+        dsaas-analy: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dsp-svc-anomaly-30-cs
+  labels:
+    component: dsp-svc-anomaly-30
+spec:
+  selector:
+    component: dsp-svc-anomaly-30
+  ports:
+  - protocol: "TCP"
+    port: 8081
+    targetPort: 8081
+    name: dsp-svc-anomaly-30-8081
+  type: ClusterIP

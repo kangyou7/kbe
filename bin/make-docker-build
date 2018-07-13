@@ -1,0 +1,45 @@
+#!/bin/bash
+
+if [ $# -lt 1 ] ; then
+   echo "Usages: $0 <Jar Name> <Run Command>"
+   exit
+fi
+
+JAR_NAME=$1
+
+DOCKERFILE_STR=""
+DOCKERFILE_STR=$DOCKERFILE_STR"FROM registry.secuiot/base_java:8u151\n"
+DOCKERFILE_STR=$DOCKERFILE_STR"\n"
+DOCKERFILE_STR=$DOCKERFILE_STR"ADD $JAR_NAME /$JAR_NAME\n"
+DOCKERFILE_STR=$DOCKERFILE_STR"\n"
+if [ $# -eq 1 ] ; then
+   DOCKERFILE_STR=$DOCKERFILE_STR"ENTRYPOINT [\"java\", \"-jar\", \"/$JAR_NAME\"]\n"
+   DOCKERFILE_STR=$DOCKERFILE_STR"\n"
+   DOCKERFILE_STR=$DOCKERFILE_STR"EXPOSE 8080\n"
+else
+   if [ $2 == "front" ] ; then
+      DOCKERFILE_STR=""
+      DOCKERFILE_STR=$DOCKERFILE_STR"FROM registry.secuiot/base_node:8.9.4-alpine\n"
+      DOCKERFILE_STR=$DOCKERFILE_STR"\n"
+      DOCKERFILE_STR=$DOCKERFILE_STR"ADD $JAR_NAME /$JAR_NAME\n"
+      DOCKERFILE_STR=$DOCKERFILE_STR"ADD entrypoint.sh /entrypoint.sh\n"
+      DOCKERFILE_STR=$DOCKERFILE_STR"\n"
+      DOCKERFILE_STR=$DOCKERFILE_STR"RUN cd /$JAR_NAME &&npm install\n"
+      DOCKERFILE_STR=$DOCKERFILE_STR"\n"
+      DOCKERFILE_STR=$DOCKERFILE_STR"ENTRYPOINT \"/entrypoint.sh\"\n"
+      DOCKERFILE_STR=$DOCKERFILE_STR"\n"
+      DOCKERFILE_STR=$DOCKERFILE_STR"EXPOSE 80\n"
+   else
+      DOCKERFILE_STR=$DOCKERFILE_STR"ENTRYPOINT [\"java\""
+      for (( c=2 ; c<=$# ; c++ ))
+      do
+         DOCKERFILE_STR=$DOCKERFILE_STR", \"${!c}\""
+      done
+      DOCKERFILE_STR=$DOCKERFILE_STR", \"-jar\", \"/$JAR_NAME\"]\n"
+
+      DOCKERFILE_STR=$DOCKERFILE_STR"\n"
+      DOCKERFILE_STR=$DOCKERFILE_STR"EXPOSE 8080\n"
+   fi
+fi
+
+printf "$DOCKERFILE_STR"

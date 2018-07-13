@@ -1,0 +1,44 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: dsp-svc-unique
+  labels:
+    component: dsp-svc-unique
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: dsp-svc-unique
+  template:
+    metadata:
+      labels:
+        component: dsp-svc-unique
+    spec:
+      hostAliases:
+      - ip: "10.250.238.35"
+        hostnames:
+        - "registry.secuiot"
+      containers:
+      - name: dsp-svc-unique
+        image: registry.secuiot/test/dsp-svc-unique:18.05.11.18.00-SNAPSHOT
+        ports:
+        - containerPort: 8081
+          name: http
+      nodeSelector:
+        dsaas-analy: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dsp-svc-unique-cs
+  labels:
+    component: dsp-svc-unique
+spec:
+  selector:
+    component: dsp-svc-unique
+  ports:
+  - protocol: "TCP"
+    port: 8081
+    targetPort: 8081
+    name: dsp-svc-unique-8081
+  type: ClusterIP

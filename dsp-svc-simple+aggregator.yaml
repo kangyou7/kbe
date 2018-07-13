@@ -1,0 +1,40 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: spark-master
+  labels:
+    name: spark-master
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: spark-master
+    spec:
+      nodeSelector:
+        spark-master: "true"
+      containers:
+      - name: spark-master
+        image: registry.secuiot/infra/spark:2.3.0-hadoop2.7_5
+        imagePullPolicy: "IfNotPresent"
+        volumeMounts:
+            - name: spark-data
+              mountPath: /data
+        name: spark-master
+        ports:
+        - containerPort: 7077
+          protocol: TCP
+        command:
+          - "/bin/bash"
+          - "-c"
+          - "--"
+        args :
+          - '/start-master.sh &
+          /opt/spark/bin/spark-submit --class com.skinfosec.dsp.spark.agg.AggregatorAll /data/dsp-aggregator* >> /opt/spark/logs/agg.log&
+          /opt/spark/bin/spark-submit --class com.skinfosec.dsp.simple.SimpleMain /data/dsp-svc-simple* 19 >> /opt/spark/logs/simple19.log&
+          /opt/spark/bin/spark-submit --class com.skinfosec.dsp.simple.SimpleMain /data/dsp-svc-simple* 30 >> /opt/spark/logs/simple30.log&
+        while true ; do sleep 3600 ; done'
+      volumes:
+        - hostPath:
+            path: /disk1/spark/data
+          name: spark-data

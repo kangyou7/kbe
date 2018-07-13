@@ -1,0 +1,52 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: dsp-svc-auth
+  labels:
+    component: dsp-svc-auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: dsp-svc-auth
+  template:
+    metadata:
+      labels:
+        component: dsp-svc-auth
+    spec:
+      hostAliases:
+      - ip: "10.250.238.35"
+        hostnames:
+        - "registry.secuiot"
+      containers:
+      - name: dsp-svc-auth
+        image: registry.secuiot/test/dsp-svc-auth:18.07.12.23.16-SNAPSHOT
+        resources:
+          requests:
+            memory: "1024Mi"
+          limits:
+            memory: "2048Mi"
+        env:
+        - name: JVM_OPTS
+          value: "-Xms512M -Xmx1024M -XX:MetaspaceSize=192M -XX:MaxMetaspaceSize=1024m"
+        ports:
+        - containerPort: 8081
+          name: http
+      nodeSelector:
+        dsaas-msa: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dsp-svc-auth-cs
+  labels:
+    component: dsp-svc-auth
+spec:
+  selector:
+    component: dsp-svc-auth
+  ports:
+  - protocol: "TCP"
+    port: 8081
+    targetPort: 8081
+    name: dsp-svc-auth-8081
+  type: ClusterIP

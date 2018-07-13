@@ -1,0 +1,68 @@
+#doop02.secuiot!/bin/bash
+
+INST_PATH=$(dirname $(dirname $(which $0)))
+
+source $INST_PATH/conf/envs
+source $INST_PATH/bin/.color
+
+#USAGES $# 2 "<Jar Name> <Jar File>  <Class Name>"
+
+JAR_NAME=$1
+JAR_FILE=$2
+CLASS_NAME=$3
+RUN_CMD=$4
+
+WORK_DIR=/secuIOT/deploy/skinfosec-dsp
+BUILD_WORK_DIR=$WORK_DIR/$JAR_NAME
+RUN_FILE=$BUILD_WORK_DIR/run_list
+
+
+
+SPARK_MASTER=ds-node03.secuiot
+DATA_PATH=/disk1/spark/data/
+
+echo 1. Remove old JAR file to spark-master
+ssh $SPARK_MASTER "rm -rf $DATA_PATH/$JAR_NAME*"
+
+
+echo -e $BLUE"2. Send JAR file[ $JAR_NAME ] to spark-master"$NC
+scp $BUILD_WORK_DIR/$JAR_FILE $SPARK_MASTER:$DATA_PATH
+
+
+echo 3. Make run_list
+
+TEXT=$JAR_NAME:$CLASS_NAME:$RUN_CMD
+if [ -f "$RUN_FILE" ]; then
+        isExist=false
+        while read LINE; do
+                if [[ "$LINE" == "$TEXT" ]]; then
+                        isExist=true
+                fi
+        done < $RUN_FILE
+
+        if [ "$isExist" = false ]; then
+                echo $TEXT >> $RUN_FILE
+        fi
+else
+        echo $TEXT >> $RUN_FILE
+fi
+
+#echo 4. Send run_list
+#scp $RUN_FILE $SPARK_MASTER:$DATA_PATH
+
+
+echo 4. Make Kube Yaml
+$BIN_DIR/make-kube-spark-yaml $RUN_FILE > $WORK_DIR/$JAR_NAME.yaml
+
+echo 5. Stop spark-master
+kubectl delete -f $WORK_DIR/$JAR_NAME.yaml
+
+echo 6. Start spark-master
+kubectl create -f $WORK_DIR/$JAR_NAME.yaml
+
+echo 7. Stop spark-worker
+kubectl delete -f /secuIOT/k8s-catalog/spark/2.3.0/3.park-worker-resource.yaml
+
+
+echo 8. Start spark-worker
+kubectl create -f /secuIOT/k8s-catalog/spark/2.3.0/3.park-worker-resource.yaml

@@ -1,0 +1,72 @@
+#!/bin/bash
+
+if [ $# -ne 4 ] ; then
+   echo "Usages: $0 <Project Name> <Docker Image Name> <Port Number:8080> <Replica>"
+   exit
+fi
+
+JAR_NAME=$1
+DI_NAME=$2
+PORT_NUM=$3
+REPLICAS=$4
+
+if [ ${JAR_NAME:4:3} == "svc" ] ; then
+	LABELS="      nodeSelector:\n        msa: \"true\"\n"
+elif [ ${JAR_NAME:4:2} == "ui" ] ; then
+	LABELS="      nodeSelector:\n        portal: \"true\"\n"
+elif [ ${JAR_NAME:4:5} == "infra" ] ; then
+	LABELS="      nodeSelector:\n        apigw: \"true\"\n"
+fi
+
+YAML_STR="apiVersion: apps/v1beta1\n"
+YAML_STR=$YAML_STR"kind: Deployment\n"
+YAML_STR=$YAML_STR"metadata:\n"
+YAML_STR=$YAML_STR"  name: $JAR_NAME\n"
+YAML_STR=$YAML_STR"  labels:\n"
+YAML_STR=$YAML_STR"    component: $JAR_NAME\n"
+YAML_STR=$YAML_STR"spec:\n"
+YAML_STR=$YAML_STR"  replicas: $REPLICAS\n"
+YAML_STR=$YAML_STR"  selector:\n"
+YAML_STR=$YAML_STR"    matchLabels:\n"
+YAML_STR=$YAML_STR"      component: $JAR_NAME\n"
+YAML_STR=$YAML_STR"  template:\n"
+YAML_STR=$YAML_STR"    metadata:\n"
+YAML_STR=$YAML_STR"      labels:\n"
+YAML_STR=$YAML_STR"        component: $JAR_NAME\n"
+YAML_STR=$YAML_STR"    spec:\n"
+YAML_STR=$YAML_STR"      hostAliases:\n"
+YAML_STR=$YAML_STR"      - ip: \"10.250.238.35\"\n"
+YAML_STR=$YAML_STR"        hostnames:\n"
+YAML_STR=$YAML_STR"        - \"registry.secuiot\"\n"
+YAML_STR=$YAML_STR"      containers:\n"
+YAML_STR=$YAML_STR"      - name: $JAR_NAME\n"
+YAML_STR=$YAML_STR"        image: $DI_NAME\n"
+YAML_STR=$YAML_STR"        ports:\n"
+YAML_STR=$YAML_STR"        - containerPort: $PORT_NUM\n"
+YAML_STR=$YAML_STR"          name: http\n"
+YAML_STR=$YAML_STR$LABELS
+
+
+if ! [ $JAR_NAME == "dsp-ui-control" -o $JAR_NAME == "dsp-ui-management" ]; then
+
+YAML_STR=$YAML_STR"---\n"
+YAML_STR=$YAML_STR"apiVersion: v1\n"
+YAML_STR=$YAML_STR"kind: Service\n"
+YAML_STR=$YAML_STR"metadata:\n"
+YAML_STR=$YAML_STR"  name: ${JAR_NAME}-cs\n"
+YAML_STR=$YAML_STR"  labels:\n"
+YAML_STR=$YAML_STR"    component: $JAR_NAME\n"
+YAML_STR=$YAML_STR"spec:\n"
+YAML_STR=$YAML_STR"  selector:\n"
+YAML_STR=$YAML_STR"    component: $JAR_NAME\n"
+YAML_STR=$YAML_STR"  ports:\n"
+YAML_STR=$YAML_STR"  - protocol: \"TCP\"\n"
+YAML_STR=$YAML_STR"    port: $PORT_NUM\n"
+YAML_STR=$YAML_STR"    targetPort: $PORT_NUM\n"
+YAML_STR=$YAML_STR"    name: $JAR_NAME-$PORT_NUM\n"
+YAML_STR=$YAML_STR"  type: ClusterIP\n"
+
+fi
+
+printf "$YAML_STR"
+

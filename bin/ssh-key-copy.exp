@@ -1,0 +1,26 @@
+#!/usr/bin/expect
+
+set IP [lindex $argv 0]
+set USR [lindex $argv 1]
+set PW [lindex $argv 2]
+set AK [lindex $argv 3]
+
+spawn ssh $USR@$IP
+expect -re "yes/no" {
+  send "yes\r"
+  exp_continue
+} -re "password:" {
+   send "$PW\r"
+   exp_continue
+}
+send "sudo -s\r"
+expect "password" {
+  send "$PW\r"
+  exp_continue
+}
+send "echo `whoami`'_EXP'\r"
+expect "root_EXP" {
+  send "mkdir -p ~/.ssh;echo $AK >> /root/.ssh/authorized_keys;chmod 600 /root/.ssh/authorized_keys\r"
+  exp_continue
+}
+exit

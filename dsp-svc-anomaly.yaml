@@ -1,0 +1,44 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: dsp-svc-anomaly
+  labels:
+    component: dsp-svc-anomaly
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: dsp-svc-anomaly
+  template:
+    metadata:
+      labels:
+        component: dsp-svc-anomaly
+    spec:
+      hostAliases:
+      - ip: "10.250.238.35"
+        hostnames:
+        - "registry.secuiot"
+      containers:
+      - name: dsp-svc-anomaly
+        image: registry.secuiot/test/dsp-svc-anomaly:18.05.11.10.51-SNAPSHOT
+        ports:
+        - containerPort: 8081
+          name: http
+      nodeSelector:
+        dsaas-analy: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dsp-svc-anomaly-cs
+  labels:
+    component: dsp-svc-anomaly
+spec:
+  selector:
+    component: dsp-svc-anomaly
+  ports:
+  - protocol: "TCP"
+    port: 8081
+    targetPort: 8081
+    name: dsp-svc-anomaly-8081
+  type: ClusterIP

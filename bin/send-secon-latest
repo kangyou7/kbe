@@ -1,0 +1,18 @@
+
+LOCAL_REGISTRY="10.178.167.25:5000"
+JAR_LEVEL="test"
+if [ ${1:6} == "dsp-ui" ] ; then
+   JAR_LEVEL="front"
+   PORT="8080"
+else
+   PORT="8081"
+fi
+JAR_NAME=$1
+
+JAR_VERS=$(docker images |grep $JAR_NAME|head -1|awk '{print $2}')
+
+   echo "Backup Docker Image [ $LOCAL_REGISTRY/$JAR_LEVEL/$JAR_NAME:$JAR_VERS ]"
+   /data/backup-image.sh $LOCAL_REGISTRY/$JAR_LEVEL/$JAR_NAME:$JAR_VERS
+
+   echo "Deploy to SECON Server [ $JAR_NAME $LOCAL_REGISTRY/$JAR_LEVEL/$JAR_NAME $JAR_VERS ${PORT} ]"
+   /data/secon_run.sh $JAR_NAME $LOCAL_REGISTRY/$JAR_LEVEL/$JAR_NAME $JAR_VERS ${PORT}

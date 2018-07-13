@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dsp-ui-control-cs
+  labels:
+    component: dsp-ui-control
+spec:
+  selector:
+    component: dsp-ui-control
+  ports:
+  - protocol: "TCP"
+    port: 8080
+    targetPort: 8080
+    name: dsp-ui-control-8080
+  type: ClusterIP

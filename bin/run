@@ -1,0 +1,45 @@
+#!/bin/bash
+
+INST_PATH=$(dirname $(dirname $(which $0)))
+source $INST_PATH/conf/envs
+source $INST_PATH/bin/.color
+
+if [ $# -lt 2 ] ; then
+   echo "Usages : $0 <Project Name> <Docker Image Name+Tag>"
+   exit
+fi
+
+echo $2
+
+PNAME=$1
+DINAME=$2
+
+PORT=8080
+REPLICAS=1
+
+if [ $# -gt 2 ]; then
+   PORT=$3
+fi
+
+if [ $PNAME == "dsp-ui-control" -o $PNAME == "dsp-ui-management" ]; then
+   REPLICAS=1
+elif [ $PNAME == "dsp-infra-gateway" ]; then
+   REPLICAS=1
+fi
+
+
+## Make Kube yamli
+$BIN_DIR/make-kube-yaml $PNAME $DINAME $PORT $REPLICAS > $BUILD_WORK_DIR/$PNAME.yaml
+
+#if [ $# -gt 2 ] ; then 
+#     $BIN_DIR/make-kube-yaml $PNAME $DINAME $3 1 > $BUILD_WORK_DIR/$PNAME.yaml
+#else
+#     $BIN_DIR/make-kube-yaml $PNAME $DINAME 8080 1 > $BUILD_WORK_DIR/$PNAME.yaml
+#fi
+
+## DELETE
+kubectl delete -f $BUILD_WORK_DIR/$PNAME.yaml
+
+## RUN
+kubectl create -f $BUILD_WORK_DIR/$PNAME.yaml
+

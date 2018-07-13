@@ -1,0 +1,44 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: dsp-svc-aggregator
+  labels:
+    component: dsp-svc-aggregator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: dsp-svc-aggregator
+  template:
+    metadata:
+      labels:
+        component: dsp-svc-aggregator
+    spec:
+      hostAliases:
+      - ip: "10.250.238.35"
+        hostnames:
+        - "registry.secuiot"
+      containers:
+      - name: dsp-svc-aggregator
+        image: registry.secuiot/test/dsp-svc-aggregator:18.04.20.17.30-SNAPSHOT
+        ports:
+        - containerPort: 8081
+          name: http
+      nodeSelector:
+        dsaas-analy: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dsp-svc-aggregator-cs
+  labels:
+    component: dsp-svc-aggregator
+spec:
+  selector:
+    component: dsp-svc-aggregator
+  ports:
+  - protocol: "TCP"
+    port: 8081
+    targetPort: 8081
+    name: dsp-svc-aggregator-8081
+  type: ClusterIP
