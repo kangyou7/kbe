@@ -1,0 +1,36 @@
+cluster:
+  name: ${CLUSTER_NAME}
+
+node:
+  master: ${NODE_MASTER}
+  data: ${NODE_DATA}
+  name: ${NODE_NAME}
+  ingest: ${NODE_INGEST}
+
+
+network.host: ${NETWORK_HOST}
+
+path:
+  data: /data/data
+  repo: /data/repo
+
+bootstrap:
+  memory_lock: ${MEMORY_LOCK}
+
+http:
+  enabled: ${HTTP_ENABLE}
+  compression: true
+  cors:
+    enabled: ${HTTP_CORS_ENABLE}
+    allow-origin: ${HTTP_CORS_ALLOW_ORIGIN}
+    allow-methods: ${HTTP_CORS_ALLOW_METHODS}
+    allow-headers: ${HTTP_CORS_ALLOW_HEADERS}
+
+discovery:
+  zen:
+    ping.unicast.hosts: ${DISCOVERY_SERVICE}
+    minimum_master_nodes: ${NUMBER_OF_MASTERS}
+
+xpack:
+  security:
+    enabled: ${XPACK_SECURITY_ENABLE}
